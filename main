@@ -1,0 +1,243 @@
+from flask import Flask, jsonify
+from functools import reduce
+import functools
+import math
+
+app = Flask(__name__)
+
+
+# Fibonacci hustling
+def fibonacci(n):
+    a, b = 0, 1
+    for _ in range(n):
+        a, b = b, a + b
+    return a
+
+
+# Primfaktorzerlegung
+def prime_factors(n):
+    factors = []
+    i = 2
+    while i * i <= n:
+        while (n % i) == 0:
+            factors.append(i)
+            n //= i
+        i += 1
+    if n > 1:
+        factors.append(n)
+    return factors
+
+
+# Algorithmus zur Berechnung der nächsten Primzahl
+def next_prime(n):
+    while True:
+        n += 1
+        if all(n % i != 0 for i in range(2, int(math.sqrt(n)) + 1)):
+            return n
+
+
+# Faktorieller Algorithmus (Rekursion)
+def factorial(n):
+    if n == 0 or n == 1:
+        return 1
+    else:
+        return n * factorial(n - 1)
+
+
+def process_item(number):
+    return number * 2 > 10
+
+
+@app.route('/process_numbers/<int:n>')
+def process_numbers(n):
+    number_list = range(1, n + 1)
+    filter_numbers = [number for number in number_list if process_item(number)]
+    return jsonify({"valid_numbers": filter_numbers})
+
+
+# Closure-Beispiel (ist für Basisberechnung)
+def base_calculator(base):
+    def calculate(n):
+        return base ** n
+
+    return calculate
+
+
+# Part eins: Bubble sort
+def swap(arr, i, j):
+    arr[i], arr[j] = arr[j], arr[i]
+
+
+# Part zwei: Bubble sort
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                swap(arr, j, j + 1)
+    return arr
+
+def filter_even_numbers(number_list):
+    return filter(lambda x: x % 2 == 0, number_list)
+
+
+def square_numbers(number_list):
+    return map(lambda x: x ** 2, number_list)
+
+
+# Funktionen als Objekte (werden unten gebraucht)
+compose = lambda f, g: lambda x: f(g(x))
+pipe = lambda f, g: lambda x: g(f(x))
+
+# Lambda-Ausdrücke für Sortieren und Vergleichen
+sort_by_length = lambda lst: sorted(lst, key=lambda x: len(x))
+compare_ascending = lambda x, y: x - y
+
+# Map, Filter, Reduce Funktionen definieren für die Verwendung in der Anwendung
+numbers = [1, 3, 9, 2, 5, 8, 6, 7, 4,10,13,14,12,18,15,17,16,20,19]
+mapped_numbers = list(map(lambda x: x ** 2, numbers))  # Quadrieren der Zahlen
+
+filtered_numbers = list(filter(lambda x: x % 2 == 0, numbers))  # Nur gerade Zahlen
+reduced_value = functools.reduce(lambda x, y: x + y, numbers)  # Summiere alle Zahlen
+
+
+# App startet hier
+
+@app.route('/')
+def home():
+    return '''
+    <h3>Willkommen zu der Flask Anwendung/Projekt über erweiterte funktionale Programmierung
+    oder "Eine kleine Mathematische Hilfe"</h3>
+    Endpunkte:
+    <br><b>Um wieder an die Homepage zu gelangen, löschen Sie einfach ihren zusätzlich eingegebenen Endpunkt!</b>
+    <ul>
+    <li>/fibonacci/<int:n></li>
+    <li>/prime_factors/<int:n></li>
+    <li>/next_prime/<int:n></li>
+    <li>/factorial/<int:n></li>
+    <li>/map</li>
+    <li>/filter</li>
+    <li>/reduce</li>
+    <li>/compose</li>
+    <li>/pipe</li>
+    <li>/sort_list</li>
+    <li>/average_even_numbers/<int:max_value></li>
+    <li>/processing_number/<int:n></li>
+    </ul>
+    <h5>Anmerkung: Die endpoints ohne benutzerdefinierte Eingabe verwenden eine implementiere Liste, 
+    die vom User selbst im Codefile verändert werden darf :)</h5>
+    '''
+
+
+@app.route('/fibonacci/<int:n>')
+def get_fibonacci(n):
+    result = fibonacci(n)
+    return jsonify({
+        "fibonacci": result,
+        "message": f"Die {n}. Fibonacci-Zahl ist: {result}"
+    })
+
+
+@app.route('/prime_factors/<int:n>')
+def get_prime_factors(n):
+    result = prime_factors(n)
+    return jsonify({
+        "prime_factors": result,
+        "message": f"Die Primfaktoren von {n} sind: {result}"
+    })
+
+
+@app.route('/next_prime/<int:n>')
+def get_next_prime(n):
+    result = next_prime(n)
+    return jsonify({
+        "next_prime": result,
+        "message": f"Die nächste Primzahl nach {n} ist: {result}"
+    })
+
+
+@app.route('/factorial/<int:n>')
+def get_factorial(n):
+    result = factorial(n)
+    return jsonify({
+        "factorial": result,
+        "message": f"Die Fakultät von {n} ist {result}"
+    })
+
+
+@app.route('/map')
+def get_mapped():
+    return jsonify({
+        "mapped_numbers": mapped_numbers,
+        "message": "Die Zahlen wurden quadriert."
+                   "Die Zahlen Liste kann jederzeit durch den User im Codefile angepasst werden."
+    })
+
+
+@app.route('/filter')
+def get_filtered():
+    return jsonify({
+        "filtered_numbers": filtered_numbers,
+        "message": "Nur gerade Zahlen wurden gefiltert."
+                   "Die Zahlen Liste kann jederzeit durch den User im Codefile angepasst werden."
+    })
+
+
+@app.route('/reduce')
+def get_reduced():
+    return jsonify({
+        "reduced_value": reduced_value,
+        "message": f"Die Summe der Zahlen ist {reduced_value}"
+                   "Die Zahlen Liste kann jederzeit durch den User im Codefile angepasst werden."
+    })
+
+
+@app.route('/compose')
+def get_composed():
+    result = compose(lambda x: x + 1, lambda x: x * 2)(5)
+    return jsonify({
+        "composed_result": result,
+        "message": f"Das Ergebnis der Funktionskomposition ist: {result}"
+    })
+
+
+@app.route('/pipe')
+def get_piped():
+    result = pipe(lambda x: x + 1, lambda x: x * 2)(5)
+    return jsonify({
+        "piped_result": result,
+        "message": f"Das Ergebnis der Funktionsverkettung ist: {result}"
+                   "Die Zahlen Liste kann jederzeit durch den User im Codefile angepasst werden."
+    })
+
+
+@app.route('/sort_list')
+def sort_list():
+    sorted_numbers = bubble_sort(numbers)
+    return jsonify({
+        "sorted": sorted_numbers,
+        "message": "Die Liste wurde aufsteigend sortiert. "
+                   "Die Zahlen Liste kann jederzeit durch den User im Codefile angepasst werden."
+    })
+
+
+@app.route('/average_even_numbers/<int:max_value>')
+def average_even_numbers(max_value):
+    number_list = list(range(1, max_value + 1))
+    even_numbers = filter(lambda x: x % 2 == 0, number_list)
+    total_sum = reduce(lambda x, y: x + y, even_numbers)
+    count = len(list(filter(lambda x: x % 2 == 0, number_list)))
+    average = total_sum / count if count > 0 else 0
+    return jsonify({"average_even_numbers": average})
+
+
+@app.route('/processing_number/<int:n>')
+def processing_number(n):
+    number_list = range(1, n + 1)
+    even_numbers = filter_even_numbers(number_list)
+    squared_numbers = square_numbers(even_numbers)
+    return jsonify({"squared_even_numbers": list(squared_numbers)})
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
